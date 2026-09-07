@@ -49,7 +49,7 @@ export async function findRecordsPage({
   const replacements: Record<string, unknown> = { limit: limit + 1 };
 
   if (cursor !== undefined) {
-    conditions.push("id > :cursor");
+    conditions.push("id < :cursor");
     replacements.cursor = cursor;
   }
   if (q) {

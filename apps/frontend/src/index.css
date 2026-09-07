@@ -57,6 +57,10 @@ td {
   box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.15);
 }
 
+.post-id-cell {
+  min-width: 5rem;
+}
+
 .body-cell {
   position: relative;
   max-width: 320px;
@@ -228,6 +232,12 @@ td {
   color: #a8071a;
 }
 
+.records-cap-message {
+  text-align: center;
+  color: gray;
+  font-style: italic;
+}
+
 .upload-rejected {
   margin: 0.75rem auto 0;
   max-width: 480px;
@@ -259,6 +269,10 @@ td {
 .upload-rejected-line {
   font-weight: 500;
   color: #a8071a;
+}
+
+.conflict-diff-modal  {
+  max-width: 60vw;
 }
 
 .conflict-diff-modal table {
