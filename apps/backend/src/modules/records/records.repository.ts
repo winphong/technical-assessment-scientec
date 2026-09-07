@@ -31,10 +31,12 @@ function toRecordRow(row: RecordRowDb): RecordRow {
 }
 
 /**
- * Keyset pagination (`WHERE id > :cursor ORDER BY id LIMIT n`) rather than `OFFSET`: it
+ * Keyset pagination (`WHERE id < :cursor ORDER BY id DESC LIMIT n`) rather than `OFFSET`: it
  * uses the primary key index directly and stays stable if rows are inserted mid-scroll,
  * unlike `OFFSET n` whose page boundaries shift under concurrent writes — relevant here
  * since uploads can be landing new rows while someone else is paging through the list.
+ * Ordered newest-id-first since the most recently ingested records are typically the
+ * most relevant ones to see first.
  *
  * Search is substring/partial match over `search_blob` (a generated `name || email ||
  * body` column, see the init migration) via the `pg_trgm` GIN index, so e.g. "gard"

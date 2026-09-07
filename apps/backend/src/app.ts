@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
+import { MAX_UPLOAD_BYTES } from "@scientec/shared";
 import { sequelize } from "./db/client";
 import { uploadRoutes } from "./modules/upload/upload.routes";
 import { recordsRoutes } from "./modules/records/records.routes";
@@ -23,7 +24,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await app.register(multipart, {
     limits: {
-      fileSize: 100 * 1024 * 1024, // 100MB — generous for an assessment-scale CSV
+      fileSize: MAX_UPLOAD_BYTES,
       files: 1,
     },
   });

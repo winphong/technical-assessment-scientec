@@ -1,10 +1,14 @@
 import { useRef, useState } from "react";
+import { MAX_UPLOAD_BYTES } from "@scientec/shared";
 import { useUploadCsv } from "../api/useUpload";
 import { useActiveUpload } from "../api/useActiveUpload";
+
+const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
 
 export function UploadDropzone() {
   const [isDragging, setIsDragging] = useState(false);
   const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mutation = useUploadCsv();
   const { data: activeUpload } = useActiveUpload();
@@ -36,6 +40,14 @@ export function UploadDropzone() {
     // Staging a new file starts a fresh attempt — clear whatever the previous one left
     // behind (success/error text) instead of leaving it visible underneath.
     mutation.reset();
+    setClientError(null);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setStagedFile(null);
+      setClientError(
+        `"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB, which exceeds the ${MAX_UPLOAD_MB}MB upload limit.`,
+      );
+      return;
+    }
     setStagedFile(file);
   }
 
@@ -154,6 +166,12 @@ export function UploadDropzone() {
       {mutation.isError && (
         <p role="alert" className="upload-result upload-error">
           Upload failed: {mutation.error.message}
+        </p>
+      )}
+
+      {clientError && (
+        <p role="alert" className="upload-result upload-error">
+          {clientError}
         </p>
       )}
     </div>
