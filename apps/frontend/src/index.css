@@ -1,0 +1,111 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 1.5rem 2rem;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+section {
+  margin-bottom: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #ddd;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.body-cell {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-dropzone,
+.conflict-banner,
+.live-activity-banner {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.upload-dropzone {
+  background: white;
+  border: 1px solid #ddd;
+}
+
+.conflict-banner {
+  background: #fff4e5;
+  border: 1px solid #f0b429;
+}
+
+.live-activity-banner {
+  background: #e6f4ff;
+  border: 1px solid #69b1ff;
+  font-size: 0.9rem;
+}
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.conflict-diff-modal table {
+  margin: 1rem 0;
+}
+
+.diff-changed {
+  background: #fff1b8;
+  font-weight: 600;
+}
+
+.conflict-diff-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+.reset-db {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.reset-db button {
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #a8071a;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.reset-db button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

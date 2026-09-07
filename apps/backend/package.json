@@ -1,0 +1,37 @@
+{
+  "name": "@scientec/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/server.ts",
+    "start": "bun run src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "migrate": "sequelize-cli db:migrate --config src/db/config/config.cjs --migrations-path src/db/migrations --models-path src/db/models --seeders-path src/db/seeders",
+    "migrate:undo": "sequelize-cli db:migrate:undo --config src/db/config/config.cjs --migrations-path src/db/migrations --models-path src/db/models --seeders-path src/db/seeders",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "@fastify/multipart": "^10.1.1",
+    "@scientec/shared": "workspace:*",
+    "csv-parse": "^7.0.2",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.12.3",
+    "p-limit": "^7.1.1",
+    "pg": "^8.23.0",
+    "pg-hstore": "^2.3.4",
+    "reflect-metadata": "^0.2.2",
+    "sequelize": "^6.37.7",
+    "sequelize-typescript": "^2.1.6",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "@types/pg": "^8.15.6",
+    "form-data": "^4.0.6",
+    "sequelize-cli": "^6.6.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}

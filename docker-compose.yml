@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scientec
+    ports:
+      # Host port 5433 avoids clashing with any other local Postgres on 5432; the
+      # backend container always talks to this service internally as postgres:5432.
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: scientec
+      PORT: 3000
+    ports:
+      # Host port 3001 (container always listens on 3000 internally) avoids clashing
+      # with any other local service already bound to 3000.
+      - "3001:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      # Vite inlines VITE_* vars into the static bundle at build time — a runtime
+      # `environment:` entry here would have no effect on an already-built bundle
+      # served by nginx, so it has to be a build arg instead. localhost:3001 is correct
+      # because the *browser* (running on the host) is what resolves this URL, not the
+      # frontend container — matches the backend's host port mapping above.
+      args:
+        VITE_API_BASE_URL: http://localhost:3001
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  pgdata:

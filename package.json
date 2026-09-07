@@ -1,0 +1,16 @@
+{
+  "name": "scientec-assessment",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:backend": "bun run --cwd apps/backend dev",
+    "dev:frontend": "bun run --cwd apps/frontend dev",
+    "test:backend": "bun run --cwd apps/backend test",
+    "test:frontend": "bun run --cwd apps/frontend test",
+    "test": "bun run test:backend && bun run test:frontend",
+    "migrate": "bun run --cwd apps/backend migrate"
+  }
+}
