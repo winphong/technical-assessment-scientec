@@ -6,7 +6,6 @@ import { SearchBox } from "./components/SearchBox";
 import { RecordsTable } from "./components/RecordsTable";
 import { UploadDropzone } from "./components/UploadDropzone";
 import { ConflictBanner } from "./components/ConflictBanner";
-import { LiveActivityBanner } from "./components/LiveActivityBanner";
 import { ResetDbButton } from "./components/ResetDbButton";
 
 export function App() {
@@ -23,7 +22,6 @@ export function App() {
 
       <ResetDbButton />
 
-      <LiveActivityBanner />
       <ConflictBanner />
 
       <section>

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { UniqueConstraintError } from "sequelize";
 import { UploadModel } from "../../db/models/upload";
 import { serializeUpload } from "../../serializers";
 import { processUploadStream } from "./upload.service";
@@ -16,11 +17,19 @@ export async function uploadRoutes(app: FastifyInstance): Promise<void> {
     const contentLength = Number(req.headers["content-length"]);
     const bytesTotalHint = Number.isFinite(contentLength) && contentLength > 0 ? contentLength : null;
 
-    const upload = await UploadModel.create({
-      filename: file.filename,
-      status: "processing",
-      bytesTotal: bytesTotalHint,
-    });
+    let upload: UploadModel;
+    try {
+      upload = await UploadModel.create({
+        filename: file.filename,
+        status: "processing",
+        bytesTotal: bytesTotalHint,
+      });
+    } catch (err) {
+      if (err instanceof UniqueConstraintError) {
+        return reply.code(409).send({ error: "Another upload is already in progress" });
+      }
+      throw err;
+    }
 
     // Deliberately awaited within this handler rather than fire-and-forget: with
     // @fastify/multipart, the file part's stream is tied to the request lifecycle, so it

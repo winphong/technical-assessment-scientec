@@ -12,6 +12,7 @@ module.exports = {
       email: { type: Sequelize.STRING, allowNull: false },
       body: { type: Sequelize.TEXT, allowNull: false },
       updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn("now") },
+      created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn("now") },
       // FK to uploads added after the uploads table exists, see below.
       updated_by_upload_id: { type: Sequelize.UUID, allowNull: true },
     });

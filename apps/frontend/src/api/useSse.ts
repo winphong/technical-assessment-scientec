@@ -33,7 +33,7 @@ export function createSseEventHandler(queryClient: QueryClient, options: { debou
 
   function scheduleInvalidate(key: string): void {
     pendingKeys.add(key);
-    if (timer) return;
+    if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       for (const pendingKey of pendingKeys) {
         queryClient.invalidateQueries({ queryKey: [pendingKey] });

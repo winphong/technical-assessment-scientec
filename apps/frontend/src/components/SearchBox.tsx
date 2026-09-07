@@ -17,6 +17,7 @@ export function SearchBox({ onSearch, debounceMs = 300 }: SearchBoxProps) {
   return (
     <input
       type="search"
+      className="search-box"
       placeholder="Search name, email, or body..."
       value={value}
       onChange={(e) => setValue(e.target.value)}

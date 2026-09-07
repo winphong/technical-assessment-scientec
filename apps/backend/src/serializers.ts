@@ -16,6 +16,9 @@ export function serializeUpload(u: UploadModel): Upload {
     // so coercing to number keeps the wire type matching @scientec/shared's `Upload`.
     bytesTotal: u.bytesTotal === null ? null : Number(u.bytesTotal),
     bytesProcessed: Number(u.bytesProcessed),
+    // Not a DB column — only known transiently while a stream is being parsed, and
+    // merged in by processUploadStream's live broadcasts (see upload.service.ts).
+    rowsTotal: null,
     rowsProcessed: u.rowsProcessed,
     rowsRejected: u.rowsRejected,
     rejectedSamples: u.rejectedSamples,

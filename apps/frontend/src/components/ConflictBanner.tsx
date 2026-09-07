@@ -1,11 +1,22 @@
 import { useState } from "react";
 import { useConflicts, useResolveConflict } from "../api/useConflicts";
+import { useActiveUpload } from "../api/useActiveUpload";
 import { ConflictDiffModal } from "./ConflictDiffModal";
 
 export function ConflictBanner() {
   const { data: conflicts = [] } = useConflicts();
+  const { data: activeUpload } = useActiveUpload();
   const [openConflictId, setOpenConflictId] = useState<string | null>(null);
   const resolve = useResolveConflict();
+
+  // Conflicts are detected (and their SSE events fired) row-by-row as an upload streams
+  // in, but surfacing them mid-upload would mean the list — and its count — keeps
+  // changing under the user while rows are still being ingested. Hold the banner until
+  // the upload settles (completed or failed); rows already ingested by that point have
+  // already invalidated ["conflicts"], so the data is ready the moment the gate lifts.
+  const uploadInFlight =
+    activeUpload?.status === "pending" || activeUpload?.status === "processing";
+  if (uploadInFlight) return null;
 
   if (conflicts.length === 0) return null;
 
@@ -14,7 +25,8 @@ export function ConflictBanner() {
   return (
     <div role="alert" className="conflict-banner">
       <strong>
-        {conflicts.length} conflict{conflicts.length === 1 ? "" : "s"} need review
+        {conflicts.length} conflict{conflicts.length === 1 ? "" : "s"} need
+        review
       </strong>
       <ul>
         {conflicts.map((c) => (

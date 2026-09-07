@@ -19,6 +19,12 @@ const PROGRESS_BROADCAST_INTERVAL_MS = 250;
 // Only the first N rejected rows are kept on the upload record; large malformed files
 // shouldn't balloon a JSONB column with thousands of rejection reasons.
 const MAX_REJECTED_SAMPLES = 20;
+// Dev-only escape hatch: set UPLOAD_ROW_DELAY_MS to artificially slow down row
+// processing (e.g. to 200) so upload progress is visible in the UI for small files
+// instead of finishing before anyone can see it.
+const ROW_DELAY_MS = Number(process.env.UPLOAD_ROW_DELAY_MS || 0);
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Streams, validates, and ingests one uploaded CSV, row by row, without ever buffering
@@ -27,13 +33,20 @@ const MAX_REJECTED_SAMPLES = 20;
  * through `ingestCsvRow`, whose outcome (inserted / no-op / conflict) is broadcast over
  * the event bus so every connected browser session sees it live.
  */
-export async function processUploadStream(uploadId: string, fileStream: Readable, bytesTotalHint: number | null): Promise<void> {
+export async function processUploadStream(
+  uploadId: string,
+  fileStream: Readable,
+  bytesTotalHint: number | null,
+): Promise<void> {
   const limit = pLimit(ROW_CONCURRENCY);
   const rejectedSamples: RejectedRow[] = [];
   let bytesProcessed = 0;
   let rowsProcessed = 0;
   let rowsRejected = 0;
   let lineNumber = 1; // header is line 1; first data row is line 2
+  // Known only once the parser has read every row — set right after the for-await loop
+  // below, well before all of `pending` has actually finished processing.
+  let rowsTotal: number | null = null;
 
   fileStream.on("data", (chunk: Buffer) => {
     bytesProcessed += chunk.length;
@@ -52,13 +65,23 @@ export async function processUploadStream(uploadId: string, fileStream: Readable
   let lastBroadcastAt = 0;
   const persistAndBroadcastProgress = async (force = false): Promise<void> => {
     const now = Date.now();
-    if (!force && now - lastBroadcastAt < PROGRESS_BROADCAST_INTERVAL_MS) return;
+    if (!force && now - lastBroadcastAt < PROGRESS_BROADCAST_INTERVAL_MS)
+      return;
     lastBroadcastAt = now;
     const [, [upload]] = await UploadModel.update(
-      { bytesProcessed, rowsProcessed, rowsRejected, rejectedSamples: rejectedSamples.slice(0, MAX_REJECTED_SAMPLES) },
+      {
+        bytesProcessed,
+        rowsProcessed,
+        rowsRejected,
+        rejectedSamples: rejectedSamples.slice(0, MAX_REJECTED_SAMPLES),
+      },
       { where: { id: uploadId }, returning: true },
     );
-    if (upload) eventBus.publish({ type: "upload:progress", payload: serializeUpload(upload) });
+    if (upload)
+      eventBus.publish({
+        type: "upload:progress",
+        payload: { ...serializeUpload(upload), rowsTotal },
+      });
   };
 
   const pending: Promise<void>[] = [];
@@ -73,7 +96,9 @@ export async function processUploadStream(uploadId: string, fileStream: Readable
         rowsRejected += 1;
         rejectedSamples.push({
           line: currentLine,
-          reason: parsedRow.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+          reason: parsedRow.error.issues
+            .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+            .join("; "),
           raw,
         });
         continue;
@@ -83,19 +108,29 @@ export async function processUploadStream(uploadId: string, fileStream: Readable
       pending.push(
         limit(async () => {
           const outcome = await ingestCsvRow(data, uploadId);
+          if (ROW_DELAY_MS > 0) await sleep(ROW_DELAY_MS);
           rowsProcessed += 1;
 
           if (outcome.kind === "conflict") {
-            eventBus.publish({ type: "conflict:new", payload: serializeConflict(outcome.conflict) });
+            eventBus.publish({
+              type: "conflict:new",
+              payload: serializeConflict(outcome.conflict),
+            });
           } else if (outcome.kind === "inserted") {
-            eventBus.publish({ type: "record:updated", payload: { id: data.id } });
+            eventBus.publish({
+              type: "record:updated",
+              payload: { id: data.id },
+            });
           }
           // "noop": the row was a duplicate with identical values — no record was
           // actually changed, so no record:updated event.
 
           if (outcome.kind === "conflict" || outcome.kind === "noop") {
             for (const superseded of outcome.supersededConflicts) {
-              eventBus.publish({ type: "conflict:outdated", payload: serializeConflict(superseded) });
+              eventBus.publish({
+                type: "conflict:outdated",
+                payload: serializeConflict(superseded),
+              });
             }
           }
 
@@ -103,6 +138,9 @@ export async function processUploadStream(uploadId: string, fileStream: Readable
         }),
       );
     }
+
+    rowsTotal = lineNumber - 1;
+    await persistAndBroadcastProgress(true);
 
     await Promise.all(pending);
 
@@ -122,7 +160,13 @@ export async function processUploadStream(uploadId: string, fileStream: Readable
     // so we don't race our own "failed" write against still-completing ingestions.
     await Promise.allSettled(pending);
     await UploadModel.update(
-      { status: "failed", bytesProcessed, rowsProcessed, rowsRejected, rejectedSamples: rejectedSamples.slice(0, MAX_REJECTED_SAMPLES) },
+      {
+        status: "failed",
+        bytesProcessed,
+        rowsProcessed,
+        rowsRejected,
+        rejectedSamples: rejectedSamples.slice(0, MAX_REJECTED_SAMPLES),
+      },
       { where: { id: uploadId } },
     );
     throw err;

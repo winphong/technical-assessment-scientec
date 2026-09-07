@@ -19,6 +19,10 @@ export interface Upload {
   status: UploadStatus;
   bytesTotal: number | null;
   bytesProcessed: number;
+  // Total data rows found by the CSV parser — null until parsing finishes (it isn't
+  // gated on row processing, so this is known well before `rowsProcessed` catches up),
+  // at which point it becomes the fixed denominator for a real processing progress bar.
+  rowsTotal: number | null;
   rowsProcessed: number;
   rowsRejected: number;
   rejectedSamples: RejectedRow[];

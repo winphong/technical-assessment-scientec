@@ -9,7 +9,14 @@ interface RecordsTableProps {
   onLoadMore: () => void;
 }
 
-export function RecordsTable({ records, isLoading, isError, hasNextPage, isFetchingNextPage, onLoadMore }: RecordsTableProps) {
+export function RecordsTable({
+  records,
+  isLoading,
+  isError,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
+}: RecordsTableProps) {
   if (isLoading) return <p>Loading records…</p>;
   if (isError) return <p role="alert">Failed to load records.</p>;
 
@@ -33,7 +40,10 @@ export function RecordsTable({ records, isLoading, isError, hasNextPage, isFetch
               <td>{r.postId}</td>
               <td>{r.name}</td>
               <td>{r.email}</td>
-              <td className="body-cell">{r.body}</td>
+              <td className="body-cell">
+                <span className="body-cell-truncated">{r.body}</span>
+                <span className="body-cell-popover">{r.body}</span>
+              </td>
               <td>{new Date(r.updatedAt).toLocaleString()}</td>
             </tr>
           ))}

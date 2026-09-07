@@ -10,6 +10,7 @@ function makeUpload(overrides: Partial<Upload> = {}): Upload {
     status: "processing",
     bytesTotal: 100,
     bytesProcessed: 50,
+    rowsTotal: 10,
     rowsProcessed: 5,
     rowsRejected: 0,
     rejectedSamples: [],

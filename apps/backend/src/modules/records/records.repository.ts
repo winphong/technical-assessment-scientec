@@ -40,7 +40,11 @@ function toRecordRow(row: RecordRowDb): RecordRow {
  * body` column, see the init migration) via the `pg_trgm` GIN index, so e.g. "gard"
  * matches "gardner.biz" — a `tsvector` full-text index would only match whole lexemes.
  */
-export async function findRecordsPage({ cursor, q, limit }: FindRecordsPageParams): Promise<PageOf<RecordRow>> {
+export async function findRecordsPage({
+  cursor,
+  q,
+  limit,
+}: FindRecordsPageParams): Promise<PageOf<RecordRow>> {
   const conditions: string[] = [];
   const replacements: Record<string, unknown> = { limit: limit + 1 };
 
@@ -53,13 +57,14 @@ export async function findRecordsPage({ cursor, q, limit }: FindRecordsPageParam
     replacements.q = `%${q}%`;
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const rows = await sequelize.query<RecordRowDb>(
     `SELECT id, post_id, name, email, body, updated_at, updated_by_upload_id
      FROM records
      ${where}
-     ORDER BY id ASC
+     ORDER BY id DESC
      LIMIT :limit`,
     { replacements, type: QueryTypes.SELECT },
   );

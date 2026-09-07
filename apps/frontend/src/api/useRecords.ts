@@ -14,8 +14,12 @@ export function useRecords(search: string) {
     queryKey: ["records", search],
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE) });
-      if (typeof pageParam === "number") params.set("cursor", String(pageParam));
-      if (search) params.set("q", search);
+      if (typeof pageParam === "number") {
+        params.set("cursor", String(pageParam));
+      }
+      if (search) {
+        params.set("q", search);
+      }
       return apiFetch<PageOf<RecordRow>>(`/records?${params.toString()}`);
     },
     initialPageParam: undefined as number | undefined,
